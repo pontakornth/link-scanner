@@ -1,10 +1,10 @@
-"""Link scanner module"""
+"""Link scanner."""
 import os
 import sys
 from http.client import HTTPResponse
 from urllib import request
 from typing import List
-from urllib.error import HTTPError, URLError
+from urllib.error import HTTPError
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -67,16 +67,12 @@ def is_valid_url(url: str):
     Returns:
         bool: True if the url is valid. Otherwise, it is false.
     """
-    response: HTTPResponse = request.urlopen(url)
     try:
-        code = response.getcode()
-    except URLError:
-        return False
-    if code == 403:
-        return True
-    # 4XX means error on the client side.
-    # 5XX means error on the server side.
-    return 400 <= code < 600
+        request.urlopen(url)
+    except HTTPError as e:
+        if e.getcode() != 403:
+            return False
+    return True
 
 
 def invalid_urls(urllist: List[str]) -> List[str]:
@@ -95,6 +91,17 @@ if __name__ == '__main__':
     args = sys.argv
     if len(args) != 2:
         filename = os.path.basename(sys.argv[0])
-        print(f"Usage: python3 {filename} url_to_scan")
+        print(f'Usage: python3 {filename} url_to_scan')
     else:
-        print("Url is valid now.")
+        url_to_scan = sys.argv[1]
+        all_links = get_links(url_to_scan)
+        for link in all_links:
+            print(link)
+        print()
+
+        # Print bad links.
+        invalid_links = invalid_urls(all_links)
+        if invalid_links:
+            print("Bad Links:")
+            for link in invalid_links:
+                print(link)
