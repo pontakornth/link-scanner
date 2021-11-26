@@ -4,7 +4,8 @@ import sys
 from http.client import HTTPResponse
 from urllib import request
 from typing import List
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
+from urllib.request import Request
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -68,10 +69,13 @@ def is_valid_url(url: str):
         bool: True if the url is valid. Otherwise, it is false.
     """
     try:
-        request.urlopen(url)
+        request_object = Request(url, method='HEAD')
+        request.urlopen(request_object)
     except HTTPError as e:
         if e.getcode() != 403:
             return False
+    except URLError:
+        return False
     return True
 
 
