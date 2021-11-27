@@ -1,6 +1,7 @@
 # Link Scanner
 
-It is link scanner for ISP2021.
+It is link scanner for ISP2021. It scans links in the given URL.
+Then, the program returns list of all links and bad links.
 
 ## Usage
 
