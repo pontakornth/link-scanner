@@ -1,7 +1,6 @@
 """Link scanner."""
 import os
 import sys
-from http.client import HTTPResponse
 from urllib import request
 from typing import List
 from urllib.error import HTTPError, URLError
@@ -32,6 +31,32 @@ def get_pure_link(link: str) -> str:
     no_hash = link.split('#')[0]
     no_hash_or_param = no_hash.split('?')[0]
     return no_hash_or_param
+
+
+def is_html_page(url: str) -> bool:
+    """Check if the given link is HTML or not.
+
+    The method exists because if the web driver goes to non-HTML page,
+    it might download the file. This behavior is undesired by this program.
+
+    Args:
+        url: The url to scan for. It must be a valid url.
+    Returns:
+        bool: True if the link is HTML. It is False otherwise.
+    """
+    try:
+        request_object = Request(url, method='HEAD')
+        response = request.urlopen(request_object)
+    except HTTPError:
+        return False
+    except URLError:
+        return False
+    info = response.info()
+    # Unless the server is lying, HTML content will have
+    # this content type.
+    # If the content type is text/html but the actual content is not HTML,
+    # Selenium will handle it. It can't scan the page anyway.
+    return info.get_content_type() == 'text/html'
 
 
 def get_links(url: str):
@@ -96,16 +121,19 @@ if __name__ == '__main__':
     if len(args) != 2:
         filename = os.path.basename(sys.argv[0])
         print(f'Usage: python3 {filename} url_to_scan')
-    else:
-        url_to_scan = sys.argv[1]
-        all_links = get_links(url_to_scan)
-        for link in all_links:
-            print(link)
-        print()
+        sys.exit(1)
+    url_to_scan = sys.argv[1]
+    if not is_html_page(url_to_scan):
+        print(f"{url_to_scan} is not a valid HTML page.")
+        sys.exit(1)
+    all_links = get_links(url_to_scan)
+    for link in all_links:
+        print(link)
+    print()
 
-        # Print bad links.
-        invalid_links = invalid_urls(all_links)
-        if invalid_links:
-            print("Bad Links:")
-            for link in invalid_links:
-                print(link)
+    # Print bad links.
+    invalid_links = invalid_urls(all_links)
+    if invalid_links:
+        print("Bad Links:")
+        for link in invalid_links:
+            print(link)
