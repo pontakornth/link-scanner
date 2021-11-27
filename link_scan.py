@@ -88,7 +88,7 @@ def invalid_urls(urllist: List[str]) -> List[str]:
     Returns:
         List[str]: List of invalid urls
     """
-    return [url for url in urllist if is_valid_url(url)]
+    return [url for url in urllist if not is_valid_url(url)]
 
 
 if __name__ == '__main__':
